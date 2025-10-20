@@ -322,7 +322,6 @@
                 lightboxImage.src = this.src;
                 lightboxImage.alt = this.alt;
                 lightbox.classList.add('active');
-                document.body.style.overflow = 'hidden'; // Prevent scrolling
             });
         });
 
@@ -330,7 +329,6 @@
         lightbox.addEventListener('click', function(e) {
             if (e.target === lightbox || e.target.classList.contains('lightbox-close')) {
                 lightbox.classList.remove('active');
-                document.body.style.overflow = ''; // Restore scrolling
             }
         });
 
@@ -338,7 +336,6 @@
         document.addEventListener('keydown', function(e) {
             if (e.key === 'Escape' && lightbox.classList.contains('active')) {
                 lightbox.classList.remove('active');
-                document.body.style.overflow = '';
             }
         });
 
@@ -614,8 +611,43 @@
         initLightbox();
         initBinaryAuraGenerator();
         initBinaryChat();
+        initMobileMenu();
 
         console.log('🔥 BINARY website initialized successfully!');
+    }
+
+    // ===================================
+    // Mobile Menu
+    // ===================================
+    
+    function initMobileMenu() {
+        const hamburger = document.getElementById('hamburger');
+        const navMenu = document.getElementById('navMenu');
+        const navLinks = document.querySelectorAll('.nav-link');
+
+        if (!hamburger || !navMenu) return;
+
+        // Toggle menu
+        hamburger.addEventListener('click', function() {
+            hamburger.classList.toggle('active');
+            navMenu.classList.toggle('active');
+        });
+
+        // Close menu when clicking on a link
+        navLinks.forEach(link => {
+            link.addEventListener('click', function() {
+                hamburger.classList.remove('active');
+                navMenu.classList.remove('active');
+            });
+        });
+
+        // Close menu when clicking outside
+        document.addEventListener('click', function(e) {
+            if (!hamburger.contains(e.target) && !navMenu.contains(e.target)) {
+                hamburger.classList.remove('active');
+                navMenu.classList.remove('active');
+            }
+        });
     }
 
     // ===================================
@@ -650,11 +682,13 @@
             isMinimized = !isMinimized;
             if (isMinimized) {
                 chatBody.classList.add('minimized');
-                chatToggle.textContent = '□';
+                chat.classList.remove('expanded');
+                chatToggle.textContent = '💬';
                 chatToggle.classList.remove('open');
             } else {
                 chatBody.classList.remove('minimized');
-                chatToggle.textContent = '□';
+                chat.classList.add('expanded');
+                chatToggle.textContent = '✕';
                 chatToggle.classList.add('open');
             }
         });

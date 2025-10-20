@@ -402,6 +402,52 @@
             ctx.fillText('Score: ' + score, canvas.width / 2, canvas.height / 2 + 40);
         }
 
+        // Touch controls for mobile
+        let touchStartX = 0;
+        let touchStartY = 0;
+
+        canvas.addEventListener('touchstart', (e) => {
+            e.preventDefault();
+            touchStartX = e.touches[0].clientX;
+            touchStartY = e.touches[0].clientY;
+        });
+
+        canvas.addEventListener('touchmove', (e) => {
+            e.preventDefault();
+            if (!gameRunning) return;
+
+            const touchEndX = e.touches[0].clientX;
+            const touchEndY = e.touches[0].clientY;
+
+            const diffX = touchEndX - touchStartX;
+            const diffY = touchEndY - touchStartY;
+
+            // Determine direction based on swipe
+            if (Math.abs(diffX) > Math.abs(diffY)) {
+                // Horizontal swipe
+                if (diffX > 30 && dx === 0) {
+                    dx = 1; dy = 0; // Right
+                    touchStartX = touchEndX;
+                    touchStartY = touchEndY;
+                } else if (diffX < -30 && dx === 0) {
+                    dx = -1; dy = 0; // Left
+                    touchStartX = touchEndX;
+                    touchStartY = touchEndY;
+                }
+            } else {
+                // Vertical swipe
+                if (diffY > 30 && dy === 0) {
+                    dx = 0; dy = 1; // Down
+                    touchStartX = touchEndX;
+                    touchStartY = touchEndY;
+                } else if (diffY < -30 && dy === 0) {
+                    dx = 0; dy = -1; // Up
+                    touchStartX = touchEndX;
+                    touchStartY = touchEndY;
+                }
+            }
+        });
+
         // Button events
         startBtn?.addEventListener('click', startGame);
         resetBtn?.addEventListener('click', resetGame);
@@ -476,6 +522,33 @@
             if (paddle.x + paddle.width > canvas.width) paddle.x = canvas.width - paddle.width;
         });
 
+        // Touch controls for mobile
+        canvas.addEventListener('touchmove', (e) => {
+            e.preventDefault();
+            if (!gameRunning) return;
+            const rect = canvas.getBoundingClientRect();
+            const touchX = e.touches[0].clientX - rect.left;
+            paddle.x = touchX - paddle.width / 2;
+            if (paddle.x < 0) paddle.x = 0;
+            if (paddle.x + paddle.width > canvas.width) paddle.x = canvas.width - paddle.width;
+        });
+
+        canvas.addEventListener('touchstart', (e) => {
+            e.preventDefault();
+        });
+
+        // Function to display hearts
+        function updateLivesDisplay() {
+            livesEl.innerHTML = '';
+            for (let i = 0; i < lives; i++) {
+                const heart = document.createElement('img');
+                heart.src = 'images/heart-minecraft.png';
+                heart.className = 'heart-icon';
+                heart.alt = '♥';
+                livesEl.appendChild(heart);
+            }
+        }
+
         function startGame() {
             if (gameRunning) return;
             console.log('🧱 Breakout: Starting game...');
@@ -486,7 +559,7 @@
             ball = { x: 300, y: 300, radius: 8, dx: 4, dy: -4 };
             createBricks();
             scoreEl.textContent = score;
-            livesEl.textContent = lives;
+            updateLivesDisplay();
             gameLoop = setInterval(update, 1000 / 60);
         }
 
@@ -496,7 +569,7 @@
             score = 0;
             lives = 3;
             scoreEl.textContent = score;
-            livesEl.textContent = lives;
+            updateLivesDisplay();
             createBricks();
             draw();
         }
@@ -544,7 +617,7 @@
             // Ball falls
             if (ball.y + ball.radius > canvas.height) {
                 lives--;
-                livesEl.textContent = lives;
+                updateLivesDisplay();
                 if (lives <= 0) {
                     gameOver();
                 } else {
@@ -1046,6 +1119,56 @@
             ctx.textAlign = 'center';
             ctx.fillText('GAME OVER', canvas.width / 2, canvas.height / 2);
         }
+
+        // Touch controls for mobile
+        let touchStartX = 0;
+        let touchStartY = 0;
+
+        canvas.addEventListener('touchstart', (e) => {
+            e.preventDefault();
+            touchStartX = e.touches[0].clientX;
+            touchStartY = e.touches[0].clientY;
+        });
+
+        canvas.addEventListener('touchend', (e) => {
+            e.preventDefault();
+            if (!gameRunning) return;
+
+            const touchEndX = e.changedTouches[0].clientX;
+            const touchEndY = e.changedTouches[0].clientY;
+
+            const diffX = touchEndX - touchStartX;
+            const diffY = touchEndY - touchStartY;
+
+            const absX = Math.abs(diffX);
+            const absY = Math.abs(diffY);
+
+            // Tap to rotate
+            if (absX < 20 && absY < 20) {
+                const rotated = rotate(currentPiece);
+                if (!collision(rotated, 0, 0)) {
+                    currentPiece = rotated;
+                }
+                return;
+            }
+
+            // Swipe to move
+            if (absX > absY) {
+                // Horizontal swipe
+                if (diffX > 30 && !collision(currentPiece, 1, 0)) {
+                    currentPiece.x++; // Right
+                } else if (diffX < -30 && !collision(currentPiece, -1, 0)) {
+                    currentPiece.x--; // Left
+                }
+            } else {
+                // Vertical swipe down
+                if (diffY > 30 && !collision(currentPiece, 0, 1)) {
+                    currentPiece.y++;
+                    score += 1;
+                    scoreEl.textContent = score;
+                }
+            }
+        });
 
         startBtn?.addEventListener('click', startGame);
         resetBtn?.addEventListener('click', resetGame);
